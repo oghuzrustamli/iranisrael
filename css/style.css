@@ -1,0 +1,912 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Marker Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.leaflet-marker-icon.pulsing {
+    animation: pulse 1.5s infinite;
+}
+
+/* Custom Tooltip Style */
+.custom-tooltip {
+    background: rgba(0, 0, 0, 0.8);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: white;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.custom-tooltip .leaflet-tooltip-tip {
+    display: none;
+}
+
+.marker-tooltip {
+    text-align: center;
+}
+
+.marker-tooltip strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.marker-tooltip .coordinates {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+/* Modern Incident Popup Style */
+.incident-popup {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    width: 220px;
+    backdrop-filter: blur(10px);
+}
+
+.incident-popup .leaflet-popup-content-wrapper {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+
+.incident-popup .leaflet-popup-content {
+    margin: 0;
+    width: 100% !important;
+    padding: 0;
+}
+
+.incident-header {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px 6px 0 0;
+}
+
+.incident-header h3 {
+    color: white;
+    font-size: 0.95em;
+    margin: 0;
+    padding: 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.incident-body {
+    padding: 12px;
+    background: white;
+}
+
+.target-info {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.target-info .label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.target-info .value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Military facility indicator */
+.specific-target[data-type="military"] {
+    border-left-color: #f44336;
+}
+
+/* Nuclear facility indicator */
+.specific-target[data-type="nuclear"] {
+    border-left-color: #ff9800;
+}
+
+/* Civilian area indicator */
+.specific-target[data-type="civilian"] {
+    border-left-color: #4CAF50;
+}
+
+/* Infrastructure indicator */
+.specific-target[data-type="infrastructure"] {
+    border-left-color: #9c27b0;
+}
+
+.attack-stats {
+    margin: 0 0 12px 0;
+}
+
+.stat-box {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-box .label {
+    font-size: 0.7em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.stat-box .value {
+    font-size: 0.95em;
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.weapon-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 12px 0;
+}
+
+.weapon-tag {
+    background: #e2e3e5;
+    color: #383d41;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 0.75em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.weapon-tag:hover {
+    background: #d6d8db;
+    transform: translateY(-1px);
+}
+
+.weapon-details,
+.impact-radius {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+}
+
+.weapon-details .label,
+.impact-radius .label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.weapon-details .value,
+.impact-radius .value {
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+}
+
+.custom-popup.dark-mode .weapon-details,
+.custom-popup.dark-mode .impact-radius {
+    background: #252d3b;
+}
+
+.custom-popup.dark-mode .weapon-details .label,
+.custom-popup.dark-mode .impact-radius .label {
+    color: #94a3b8;
+}
+
+.custom-popup.dark-mode .weapon-details .value,
+.custom-popup.dark-mode .impact-radius .value {
+    color: #e2e8f0;
+}
+
+.popup-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.edit-button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+    background-color: #1d4ed8;
+}
+
+.custom-popup.dark-mode .edit-button {
+    background-color: #3b82f6;
+}
+
+.custom-popup.dark-mode .edit-button:hover {
+    background-color: #2563eb;
+}
+
+.incident-footer {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 0 0 6px 6px;
+    border-top: 1px solid #eee;
+}
+
+.incident-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #666;
+    font-size: 0.75em;
+}
+
+.incident-meta .coordinates {
+    font-family: monospace;
+    background: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.incident-meta .timestamp {
+    font-weight: 500;
+}
+
+.incident-popup .leaflet-popup-tip {
+    background: #e74c3c;
+}
+
+/* Existing News Container Styles */
+.news-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.news-container h2 {
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+#auto-news-feed,
+#manual-news-feed {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 20px;
+}
+
+/* Scrollbar styling for both feeds */
+#auto-news-feed::-webkit-scrollbar,
+#manual-news-feed::-webkit-scrollbar {
+    width: 8px;
+}
+
+#auto-news-feed::-webkit-scrollbar-track,
+#manual-news-feed::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#auto-news-feed::-webkit-scrollbar-thumb,
+#manual-news-feed::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+#auto-news-feed::-webkit-scrollbar-thumb:hover,
+#manual-news-feed::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.news-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+    transition: background-color 0.2s;
+}
+
+.news-item:hover {
+    background-color: #f9f9f9;
+}
+
+.news-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.news-item h3 {
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.news-item h3 a {
+    color: #2c3e50;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.news-item h3 a:hover {
+    color: #3498db;
+}
+
+.news-item p {
+    color: #666;
+    font-size: 0.95em;
+    margin-bottom: 10px;
+}
+
+.news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85em;
+    color: #999;
+}
+
+.news-meta .source {
+    background-color: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 3px;
+    color: #666;
+}
+
+.news-meta .timestamp {
+    color: #999;
+}
+
+.refresh-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.refresh-button:hover {
+    background-color: #45a049;
+}
+
+.refresh-button:active {
+    background-color: #3d8b40;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.clear-button {
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.clear-button:hover {
+    background-color: #c82333;
+}
+
+.clear-button:active {
+    background-color: #bd2130;
+}
+
+.delete-button {
+    background-color: #6c1c1c;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.delete-button:hover {
+    background-color: #8b2323;
+}
+
+.delete-button:active {
+    background-color: #5a1717;
+}
+
+/* Data Entry Form Styles */
+.data-entry-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.data-entry-form h2 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group.half {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.submit-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.cancel-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.add-button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.submit-button:hover,
+.cancel-button:hover,
+.add-button:hover {
+    opacity: 0.9;
+}
+
+/* Autocomplete Styles */
+.autoComplete_wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.autoComplete_result {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.autoComplete_result:hover {
+    background-color: #f5f5f5;
+}
+
+.autoComplete_highlighted {
+    color: #2196F3;
+    font-weight: bold;
+}
+
+.form-group select.multi-select {
+    height: auto;
+    min-height: 120px;
+    padding: 8px;
+}
+
+.form-group select.multi-select option {
+    padding: 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+
+.form-group select.multi-select option:checked {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.form-group select.multi-select option:hover {
+    background-color: #e8f5e9;
+}
+
+#target-location {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#target-location:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.specific-target {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    font-size: 13px;
+    color: #666;
+    border-left: 3px solid #2196F3;
+}
+
+.custom-popup.dark-mode {
+    background: #1a1f2e;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.custom-popup.dark-mode .incident-header {
+    background: #151b27;
+    padding: 12px;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-popup.dark-mode .incident-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.custom-popup.dark-mode .incident-header .date {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.custom-popup.dark-mode .incident-body {
+    padding: 12px;
+    background: #1a1f2e;
+}
+
+.custom-popup.dark-mode .target-info .value {
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
+.custom-popup.dark-mode .attack-stats .value {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.custom-popup.dark-mode .weapon-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.custom-popup.dark-mode .weapon-tag {
+    background: #252d3b;
+    color: #94a3b8;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-popup.dark-mode .casualties-grid {
+    margin-top: 10px;
+    font-size: 12px;
+    background: #252d3b;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.custom-popup.dark-mode .casualties-grid .stat-box {
+    display: flex;
+    gap: 16px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.mapboxgl-popup-content {
+    padding: 0 !important;
+    background: #1a1f2e !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.mapboxgl-popup-close-button {
+    padding: 8px 12px !important;
+    color: #94a3b8 !important;
+    font-size: 18px !important;
+    background: transparent !important;
+    border: none !important;
+    z-index: 1;
+    transition: all 0.2s ease;
+}
+
+.mapboxgl-popup-close-button:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Impact Radius Circle Animation */
+@keyframes pulse-circle {
+    0% {
+        opacity: 0.1;
+    }
+    50% {
+        opacity: 0.2;
+    }
+    100% {
+        opacity: 0.1;
+    }
+}
+
+.mapboxgl-canvas-container canvas {
+    transition: all 0.3s ease;
+}
+
+/* Custom Popup Styles */
+.mapboxgl-popup {
+    max-width: 300px !important;
+}
+
+.mapboxgl-popup-content {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Impact Radius Info in Popup */
+.impact-radius {
+    padding: 8px 12px;
+    background: rgba(255, 68, 68, 0.1);
+    border-left: 3px solid #ff4444;
+    margin: 8px 0;
+}
+
+.impact-radius .label {
+    font-weight: bold;
+    color: #ff4444;
+    margin-bottom: 4px;
+}
+
+.impact-radius .value {
+    color: #666;
+}
+
+/* Marker and Animation Styles */
+.mapboxgl-marker {
+    will-change: transform;
+}
+
+.marker-container {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    pointer-events: all;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.custom-marker {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 2;
+    transition: background-color 0.3s ease;
+}
+
+.ripple-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-color: transparent;
+}
+
+.ripple-1 {
+    animation: ripple-core 2s infinite;
+}
+
+.ripple-2 {
+    animation: ripple-core 2s infinite;
+    animation-delay: 0.6s;
+}
+
+@keyframes ripple-core {
+    0% {
+        box-shadow: 0 0 0 0 var(--ripple-color);
+        opacity: 0.4;
+    }
+    70% {
+        box-shadow: 0 0 0 20px var(--ripple-color);
+        opacity: 0;
+    }
+    100% {
+        box-shadow: 0 0 0 0 var(--ripple-color);
+        opacity: 0;
+    }
+}
+
+/* Impact radius styles */
+.impact-radius {
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* Radius category indicators */
+.radius-900 { background-color: rgba(255, 0, 0, 0.1); border-left: 3px solid #FF0000; }
+.radius-800 { background-color: rgba(255, 69, 0, 0.1); border-left: 3px solid #FF4500; }
+.radius-700 { background-color: rgba(255, 107, 0, 0.1); border-left: 3px solid #FF6B00; }
+.radius-600 { background-color: rgba(255, 140, 0, 0.1); border-left: 3px solid #FF8C00; }
+.radius-500 { background-color: rgba(255, 165, 0, 0.1); border-left: 3px solid #FFA500; }
+
+/* Impact Radius Pulse Animation */
+@keyframes impact-pulse {
+    0% {
+        stroke-width: 2;
+        stroke-opacity: 0.3;
+    }
+    50% {
+        stroke-width: 3;
+        stroke-opacity: 0.5;
+    }
+    100% {
+        stroke-width: 2;
+        stroke-opacity: 0.3;
+    }
+} 

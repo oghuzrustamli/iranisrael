@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Israel-Iran Conflict Map</title>
+    <!-- Replace Leaflet with Mapbox GL JS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Add Autocomplete CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Israel-Iran Conflict Map</h1>
+            <p>Real-time updates of reported incidents</p>
+            <div class="button-group">
+                <button id="refresh-news" class="refresh-button">Refresh</button>
+                <button id="clear-data" class="clear-button">Clear</button>
+                <button id="clear-manual" class="delete-button">Bütün Manual Markerləri Sil</button>
+                <button id="toggle-form" class="add-button">Add Incident</button>
+            </div>
+        </header>
+
+        <!-- Data Entry Form -->
+        <div id="data-entry-form" class="data-entry-form" style="display: none;">
+            <h2>Add New Incident</h2>
+            <form id="incident-form">
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <select id="country" required>
+                        <option value="">Select Country</option>
+                        <option value="Israel">Israel</option>
+                        <option value="Iran">Iran</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cities">Cities (Hold Ctrl/Cmd to select multiple):</label>
+                    <select id="cities" multiple required class="multi-select">
+                        <!-- Cities will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="target-location">Specific Target Location:</label>
+                    <input type="text" id="target-location" placeholder="Enter specific target (e.g., Military Base, Government Building, etc.)" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="weapons">Weapon Types (Hold Ctrl/Cmd to select multiple):</label>
+                    <select id="weapons" multiple required class="multi-select">
+                        <option value="Airstrike">Airstrike</option>
+                        <option value="Missile">Missile</option>
+                        <option value="Drone">Drone</option>
+                        <option value="Artillery">Artillery</option>
+                        <option value="Car bomb">Car bomb</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="weapon-details">Detailed Weapon Type:</label>
+                    <input type="text" id="weapon-details" placeholder="e.g., F-35I Adir (GBU-28 bunker-buster bombs)" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="impact-radius">Impact Radius (meters):</label>
+                    <input type="number" id="impact-radius" placeholder="Enter estimated impact radius in meters" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="deaths">Ölü sayı:</label>
+                        <input type="text" id="deaths" placeholder="Təxmini rəqəm və ya 'Məlumat yoxdur'" required>
+                    </div>
+                    
+                    <div class="form-group half">
+                        <label for="injured">Yaralı sayı:</label>
+                        <input type="text" id="injured" placeholder="Təxmini rəqəm və ya 'Məlumat yoxdur'" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="incident-datetime">Date:</label>
+                    <input type="date" id="incident-datetime" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">Add Incident</button>
+                    <button type="button" class="cancel-button" onclick="toggleForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="news-container">
+            <h2>Latest Updates</h2>
+            <div id="auto-news-feed"></div>
+        </div>
+    </div>
+
+    <!-- Replace Leaflet with Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <!-- Add Autocomplete JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnxjrxNYMCfAljhcyG_c8gVmCHI7NAJ1k",
+            authDomain: "israel-iran.firebaseapp.com",
+            databaseURL: "https://israel-iran-default-rtdb.firebaseio.com",
+            projectId: "israel-iran",
+            storageBucket: "israel-iran.firebasestorage.app",
+            messagingSenderId: "44789488597",
+            appId: "1:44789488597:web:ba39f0f00367ba1d73fb5c",
+            measurementId: "G-3K4FEQN66V"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            const database = getDatabase(app);
+            
+            // Create a global Firebase object with all needed functions
+            window.FirebaseService = {
+                database,
+                ref,
+                set,
+                get,
+                child,
+                remove
+            };
+
+            console.log('Firebase initialized successfully');
+            
+            // Initialize services and make mapService globally available
+            window.mapService = new MapService();
+            window.newsService = new NewsService(window.mapService);
+
+        } catch (error) {
+            console.error('Error initializing Firebase:', error);
+        }
+    </script>
+
+    <!-- Application scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/countryBorders.js"></script>
+    <script src="../js/mapService.js"></script>
+    <script src="../js/newsService.js"></script>
+    <script src="../js/dataEntryService.js"></script>
+</body>
+</html> 
